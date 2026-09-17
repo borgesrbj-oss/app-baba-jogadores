@@ -1,21 +1,29 @@
-// ===== NAVEGAÇÃO ENTRE ABAS =====
+// ==========================================================
+// NAVEGAÇÃO ENTRE ABAS (Financeiro / Jogadores)
+// ==========================================================
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
 tabButtons.forEach(btn => {
   btn.addEventListener('click', () => {
+    // Remove a classe "active" de todos os botões e conteúdos
     tabButtons.forEach(b => b.classList.remove('active'));
     tabContents.forEach(c => c.classList.remove('active'));
+    // Ativa apenas o botão clicado e a aba correspondente
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
   });
 });
 
-// ===== MÓDULO FINANCEIRO =====
+// ==========================================================
+// MÓDULO FINANCEIRO
+// ==========================================================
 const formFinanceiro = document.getElementById('form-financeiro');
 const listaFinanceiro = document.getElementById('lista-financeiro');
 const saldoTotal = document.getElementById('saldo-total');
 
+// Guarda todos os lançamentos financeiros vindos do Firebase,
+// para serem usados depois na geração do relatório
 let todosLancamentos = [];
 
 formFinanceiro.addEventListener('submit', async (e) => {
@@ -26,6 +34,7 @@ formFinanceiro.addEventListener('submit', async (e) => {
   const valor = parseFloat(document.getElementById('fin-valor').value);
   const descricao = document.getElementById('fin-descricao').value;
 
+  // Salva o novo lançamento no Firestore
   await db.collection('financeiro').add({
     data,
     tipo,
@@ -37,6 +46,7 @@ formFinanceiro.addEventListener('submit', async (e) => {
   formFinanceiro.reset();
 });
 
+// Desenha a lista de lançamentos na tela e calcula o saldo
 function renderizarFinanceiro(registros) {
   listaFinanceiro.innerHTML = '';
   let saldo = 0;
@@ -66,13 +76,16 @@ async function excluirFinanceiro(id) {
   await db.collection('financeiro').doc(id).delete();
 }
 
+// Escuta em tempo real as mudanças na coleção "financeiro" do Firestore
 db.collection('financeiro').orderBy('criadoEm', 'desc').onSnapshot(snapshot => {
   const registros = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  todosLancamentos = registros;
+  todosLancamentos = registros; // atualiza a variável usada no relatório
   renderizarFinanceiro(registros);
 });
 
-// ===== MÓDULO JOGADORES =====
+// ==========================================================
+// MÓDULO JOGADORES
+// ==========================================================
 const formJogador = document.getElementById('form-jogador');
 const listaJogadores = document.getElementById('lista-jogadores');
 const listaJogadoresStories = document.getElementById('lista-jogadores-stories');
@@ -92,6 +105,7 @@ formJogador.addEventListener('submit', async (e) => {
   formJogador.reset();
 });
 
+// Desenha a lista de jogadores (tela normal e preview do Stories)
 function renderizarJogadores(jogadores) {
   const ordenados = [...jogadores].sort((a, b) => b.gols - a.gols);
 
@@ -131,25 +145,55 @@ db.collection('jogadores').orderBy('criadoEm', 'desc').onSnapshot(snapshot => {
   renderizarJogadores(jogadores);
 });
 
-// ===== FUNÇÃO GENÉRICA DE COMPARTILHAMENTO/DOWNLOAD (compatível com Android e iOS) =====
-function compartilharOuAbrirImagem(blob, nomeArquivo, titulo) {
+// ==========================================================
+// FUNÇÃO DE DOWNLOAD/COMPARTILHAMENTO DE IMAGEM
+// Compatível com Android (Chrome), iOS (Safari) e desktop,
+// tanto em aba normal quanto anônima.
+// ==========================================================
+function compartilharOuBaixarImagem(blob, nomeArquivo, titulo) {
   const arquivo = new File([blob], nomeArquivo, { type: 'image/png' });
   const urlImagem = URL.createObjectURL(blob);
 
+  // Função auxiliar que baixa a imagem usando um link <a> simulado.
+  // Esse método é o mais compatível entre navegadores, pois não
+  // depende de abrir uma nova aba (window.open), que costuma ser
+  // bloqueado por configurações do navegador ou por extensões
+  // instaladas (é por isso que só funcionava na aba anônima).
+  function baixarComLink() {
+    const link = document.createElement('a');
+    link.href = urlImagem;
+    link.download = nomeArquivo; // força o download em vez de navegar
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Libera a memória usada pela URL temporária após 1 segundo
+    setTimeout(() => URL.revokeObjectURL(urlImagem), 1000);
+  }
+
+  // Tenta primeiro o compartilhamento nativo do celular (menu de
+  // compartilhar do Android/iOS), que é a melhor experiência quando
+  // disponível.
   if (navigator.canShare && navigator.canShare({ files: [arquivo] })) {
     navigator.share({
       files: [arquivo],
       title: titulo
     }).catch(function (erro) {
-      console.log('Compartilhamento cancelado ou falhou, abrindo em nova aba:', erro);
-      window.open(urlImagem, '_blank');
+      // Se o usuário cancelar ou o compartilhamento falhar,
+      // cai no método de download direto por link.
+      console.log('Compartilhamento cancelado ou falhou:', erro);
+      baixarComLink();
     });
   } else {
-    window.open(urlImagem, '_blank');
+    // Em navegadores sem suporte a compartilhamento nativo
+    // (a maioria dos desktops), baixa direto por link.
+    baixarComLink();
   }
 }
 
-// ===== DOWNLOAD DA IMAGEM PARA INSTAGRAM STORIES =====
+// ==========================================================
+// BOTÃO: BAIXAR IMAGEM PARA INSTAGRAM STORIES
+// ==========================================================
 document.getElementById('btn-baixar-imagem').addEventListener('click', () => {
   const elemento = document.getElementById('stories-preview');
 
@@ -157,15 +201,17 @@ document.getElementById('btn-baixar-imagem').addEventListener('click', () => {
     width: 1080,
     height: 1920,
     scale: 4,
-    backgroundColor: null
+    backgroundColor: '#ffffff' // fundo branco em vez de transparente/preto
   }).then(canvas => {
     canvas.toBlob(function (blob) {
-      compartilharOuAbrirImagem(blob, 'lista-jogadores-stories.png', 'Artilheiros');
+      compartilharOuBaixarImagem(blob, 'lista-jogadores-stories.png', 'Artilheiros');
     }, 'image/png');
   });
 });
 
-// ===== DOWNLOAD DO RELATÓRIO FINANCEIRO =====
+// ==========================================================
+// BOTÃO: BAIXAR RELATÓRIO FINANCEIRO
+// ==========================================================
 document.getElementById('btn-baixar-relatorio').addEventListener('click', () => {
   const tipoRelatorio = document.getElementById('reportType').value;
 
@@ -173,6 +219,7 @@ document.getElementById('btn-baixar-relatorio').addEventListener('click', () => 
   let lancamentosFiltrados = [];
   let tituloPeriodo = '';
 
+  // Filtra os lançamentos de acordo com o período escolhido
   if (tipoRelatorio === 'mensal') {
     const mesAtual = agora.getMonth();
     const anoAtual = agora.getFullYear();
@@ -198,6 +245,7 @@ document.getElementById('btn-baixar-relatorio').addEventListener('click', () => 
     tituloPeriodo = `Ano de ${anoAtual}`;
   }
 
+  // Avisa o usuário se não houver dados no período escolhido
   if (lancamentosFiltrados.length === 0) {
     alert('Não há lançamentos para o período selecionado.');
     return;
@@ -213,6 +261,7 @@ document.getElementById('btn-baixar-relatorio').addEventListener('click', () => 
 
   const saldoFinal = totalEntradas - totalSaidas;
 
+  // Monta as linhas da tabela do relatório
   let linhasHtml = '';
   lancamentosFiltrados.forEach(l => {
     const cor = l.tipo === 'entrada' ? '#2e7d32' : '#c62828';
@@ -226,6 +275,7 @@ document.getElementById('btn-baixar-relatorio').addEventListener('click', () => 
     `;
   });
 
+  // Preenche o conteúdo visual do relatório (elemento escondido no HTML)
   const conteudo = document.getElementById('relatorio-conteudo');
   conteudo.innerHTML = `
     <div style="background: linear-gradient(135deg, #c9a7e0, #e07b39); padding: 20px; border-radius: 10px; color: #ffffff; margin-bottom: 20px;">
@@ -251,12 +301,13 @@ document.getElementById('btn-baixar-relatorio').addEventListener('click', () => 
     </div>
   `;
 
+  // Gera a imagem do relatório e aciona o download/compartilhamento
   html2canvas(conteudo, {
     scale: 3,
     backgroundColor: '#ffffff'
   }).then(canvas => {
     canvas.toBlob(function (blob) {
-      compartilharOuAbrirImagem(blob, 'relatorio-financeiro.png', 'Relatório Financeiro');
+      compartilharOuBaixarImagem(blob, 'relatorio-financeiro.png', 'Relatório Financeiro');
     }, 'image/png');
   });
 });

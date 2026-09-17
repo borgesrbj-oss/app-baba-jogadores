@@ -17,6 +17,16 @@
     </header>
 
     <!-- MÓDULO FINANCEIRO -->
+     <div class="report-filters">
+  <select id="reportType">
+    <option value="mensal">Mensal</option>
+    <option value="trimestral">Trimestral</option>
+    <option value="anual">Anual</option>
+  </select>
+  <select id="reportPeriod"></select>
+  <button id="btnGerarRelatorio">Baixar relatório</button>
+</div>
+<canvas id="canvasRelatorio" width="800" height="1200" style="display:none;"></canvas>
     <section id="financeiro" class="tab-content active">
       <h2>Controle Financeiro - Babá</h2>
 

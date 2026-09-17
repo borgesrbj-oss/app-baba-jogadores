@@ -138,9 +138,23 @@ document.getElementById('btn-baixar-imagem').addEventListener('click', () => {
     scale: 4,
     backgroundColor: null
   }).then(canvas => {
-    const link = document.createElement('a');
-    link.download = 'lista-jogadores-stories.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    canvas.toBlob(function (blob) {
+      const arquivo = new File([blob], 'lista-jogadores-stories.png', { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [arquivo] })) {
+        navigator.share({
+          files: [arquivo],
+          title: 'Artilheiros'
+        }).catch(function (erro) {
+          console.log('Compartilhamento cancelado ou falhou:', erro);
+        });
+      } else {
+        const link = document.createElement('a');
+        link.download = 'lista-jogadores-stories.png';
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+    }, 'image/png');
   });
 });

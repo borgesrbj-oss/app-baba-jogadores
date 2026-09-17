@@ -1,0 +1,219 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #fef6fb 0%, #eaf4fb 100%);
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.app-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.app-header h1 {
+  text-align: center;
+  color: #7a6a8a;
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  background: #f2e6f5;
+  color: #7a6a8a;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.tab-btn.active {
+  background: #d9c5e8;
+  color: #4a3b5c;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.tab-content h2 {
+  color: #6a7fa0;
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.card-form {
+  background: #ffffffcc;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.card-form input,
+.card-form select {
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1px solid #e0d5ea;
+  background: #faf7fc;
+  font-size: 13px;
+  width: 100%;
+}
+
+.card-form button {
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #b8d8d8;
+  color: #3a5a5a;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.card-form button:hover {
+  background: #a0c8c8;
+}
+
+.saldo-box {
+  background: #eaf6ef;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  color: #4a6a5a;
+}
+
+.saldo-box strong {
+  font-size: 18px;
+}
+
+.lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lista li {
+  background: #ffffffcc;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.lista li .entrada {
+  color: #4a8a5a;
+  font-weight: bold;
+}
+
+.lista li .saida {
+  color: #b06a6a;
+  font-weight: bold;
+}
+
+.lista li button {
+  background: #f5dede;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: #8a4a4a;
+  cursor: pointer;
+}
+
+.gols-edit {
+  width: 60px;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid #e0d5ea;
+  text-align: center;
+}
+
+.btn-download {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: none;
+  border-radius: 12px;
+  background: #f3d9b1;
+  color: #7a5a2a;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-download:hover {
+  background: #eecb9a;
+}
+
+.stories-preview {
+  width: 270px;
+  height: 480px;
+  margin: 0 auto 16px auto;
+  background: linear-gradient(160deg, #fbeaf5 0%, #e8f0fb 100%);
+  border-radius: 20px;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.stories-preview h3 {
+  text-align: center;
+  color: #6a5a8a;
+  margin-bottom: 16px;
+  font-size: 20px;
+}
+
+.stories-preview ol {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stories-preview ol li {
+  background: #ffffffcc;
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  color: #4a3b5c;
+}
+
+@media (min-width: 700px) {
+  .app-container {
+    max-width: 800px;
+  }
+
+  .tabs {
+    max-width: 400px;
+    margin: 0 auto 20px auto;
+  }
+}

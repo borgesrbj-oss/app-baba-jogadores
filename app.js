@@ -16,6 +16,8 @@ const formFinanceiro = document.getElementById('form-financeiro');
 const listaFinanceiro = document.getElementById('lista-financeiro');
 const saldoTotal = document.getElementById('saldo-total');
 
+let todosLancamentos = [];
+
 formFinanceiro.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -66,6 +68,7 @@ async function excluirFinanceiro(id) {
 
 db.collection('financeiro').orderBy('criadoEm', 'desc').onSnapshot(snapshot => {
   const registros = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  todosLancamentos = registros;
   renderizarFinanceiro(registros);
 });
 
@@ -151,6 +154,117 @@ document.getElementById('btn-baixar-imagem').addEventListener('click', () => {
       } else {
         const link = document.createElement('a');
         link.download = 'lista-jogadores-stories.png';
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+    }, 'image/png');
+  });
+});
+
+// ===== DOWNLOAD DO RELATÓRIO FINANCEIRO =====
+document.getElementById('btn-baixar-relatorio').addEventListener('click', () => {
+  const tipoRelatorio = document.getElementById('reportType').value;
+
+  const agora = new Date();
+  let lancamentosFiltrados = [];
+  let tituloPeriodo = '';
+
+  if (tipoRelatorio === 'mensal') {
+    const mesAtual = agora.getMonth();
+    const anoAtual = agora.getFullYear();
+    lancamentosFiltrados = todosLancamentos.filter(l => {
+      const data = new Date(l.data);
+      return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
+    });
+    tituloPeriodo = agora.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  } else if (tipoRelatorio === 'trimestral') {
+    const trimestreAtual = Math.floor(agora.getMonth() / 3);
+    const anoAtual = agora.getFullYear();
+    lancamentosFiltrados = todosLancamentos.filter(l => {
+      const data = new Date(l.data);
+      return Math.floor(data.getMonth() / 3) === trimestreAtual && data.getFullYear() === anoAtual;
+    });
+    tituloPeriodo = `${trimestreAtual + 1}º Trimestre de ${anoAtual}`;
+  } else if (tipoRelatorio === 'anual') {
+    const anoAtual = agora.getFullYear();
+    lancamentosFiltrados = todosLancamentos.filter(l => {
+      const data = new Date(l.data);
+      return data.getFullYear() === anoAtual;
+    });
+    tituloPeriodo = `Ano de ${anoAtual}`;
+  }
+
+  if (lancamentosFiltrados.length === 0) {
+    alert('Não há lançamentos para o período selecionado.');
+    return;
+  }
+
+  const totalEntradas = lancamentosFiltrados
+    .filter(l => l.tipo === 'entrada')
+    .reduce((soma, l) => soma + Number(l.valor), 0);
+
+  const totalSaidas = lancamentosFiltrados
+    .filter(l => l.tipo === 'saida')
+    .reduce((soma, l) => soma + Number(l.valor), 0);
+
+  const saldoFinal = totalEntradas - totalSaidas;
+
+  let linhasHtml = '';
+  lancamentosFiltrados.forEach(l => {
+    const cor = l.tipo === 'entrada' ? '#2e7d32' : '#c62828';
+    const sinal = l.tipo === 'entrada' ? '+' : '-';
+    linhasHtml += `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #e0d5ea;">${new Date(l.data).toLocaleDateString('pt-BR')}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e0d5ea;">${l.descricao}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e0d5ea; color: ${cor}; text-align: right;">${sinal} R$ ${Number(l.valor).toFixed(2)}</td>
+      </tr>
+    `;
+  });
+
+  const conteudo = document.getElementById('relatorio-conteudo');
+  conteudo.innerHTML = `
+    <div style="background: linear-gradient(135deg, #c9a7e0, #e07b39); padding: 20px; border-radius: 10px; color: #ffffff; margin-bottom: 20px;">
+      <h2 style="margin: 0;">Relatório Financeiro</h2>
+      <p style="margin: 4px 0 0 0;">${tituloPeriodo}</p>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+      <thead>
+        <tr style="background: #faf7fc;">
+          <th style="padding: 8px; text-align: left;">Data</th>
+          <th style="padding: 8px; text-align: left;">Descrição</th>
+          <th style="padding: 8px; text-align: right;">Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${linhasHtml}
+      </tbody>
+    </table>
+    <div style="background: #faf7fc; padding: 16px; border-radius: 10px;">
+      <p style="margin: 4px 0;">Total de entradas: <strong style="color: #2e7d32;">R$ ${totalEntradas.toFixed(2)}</strong></p>
+      <p style="margin: 4px 0;">Total de saídas: <strong style="color: #c62828;">R$ ${totalSaidas.toFixed(2)}</strong></p>
+      <p style="margin: 4px 0; font-size: 18px;">Saldo final: <strong style="color: #e07b39;">R$ ${saldoFinal.toFixed(2)}</strong></p>
+    </div>
+  `;
+
+  html2canvas(conteudo, {
+    scale: 3,
+    backgroundColor: '#ffffff'
+  }).then(canvas => {
+    canvas.toBlob(function (blob) {
+      const arquivo = new File([blob], 'relatorio-financeiro.png', { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [arquivo] })) {
+        navigator.share({
+          files: [arquivo],
+          title: 'Relatório Financeiro'
+        }).catch(function (erro) {
+          console.log('Compartilhamento cancelado ou falhou:', erro);
+        });
+      } else {
+        const link = document.createElement('a');
+        link.download = 'relatorio-financeiro.png';
         link.href = URL.createObjectURL(blob);
         link.click();
         URL.revokeObjectURL(link.href);

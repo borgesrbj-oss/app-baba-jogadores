@@ -17,16 +17,6 @@
     </header>
 
     <!-- MÓDULO FINANCEIRO -->
-     <div class="report-filters">
-  <select id="reportType">
-    <option value="mensal">Mensal</option>
-    <option value="trimestral">Trimestral</option>
-    <option value="anual">Anual</option>
-  </select>
-  <select id="reportPeriod"></select>
-  <button id="btnGerarRelatorio">Baixar relatório</button>
-</div>
-<canvas id="canvasRelatorio" width="800" height="1200" style="display:none;"></canvas>
     <section id="financeiro" class="tab-content active">
       <h2>Controle Financeiro - Babá</h2>
 
@@ -47,6 +37,19 @@
       </div>
 
       <ul id="lista-financeiro" class="lista"></ul>
+
+      <div class="report-filters">
+        <select id="reportType">
+          <option value="mensal">Mensal</option>
+          <option value="trimestral">Trimestral</option>
+          <option value="anual">Anual</option>
+        </select>
+        <button id="btn-baixar-relatorio" class="btn-relatorio">Baixar relatório</button>
+      </div>
+
+      <div id="relatorio-preview" style="position: absolute; left: -9999px; top: 0;">
+        <div id="relatorio-conteudo" style="width: 800px; padding: 40px; font-family: Arial, sans-serif; background: #ffffff;"></div>
+      </div>
     </section>
 
     <!-- MÓDULO JOGADORES -->

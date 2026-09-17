@@ -131,6 +131,24 @@ db.collection('jogadores').orderBy('criadoEm', 'desc').onSnapshot(snapshot => {
   renderizarJogadores(jogadores);
 });
 
+// ===== FUNÇÃO GENÉRICA DE COMPARTILHAMENTO/DOWNLOAD (compatível com Android e iOS) =====
+function compartilharOuAbrirImagem(blob, nomeArquivo, titulo) {
+  const arquivo = new File([blob], nomeArquivo, { type: 'image/png' });
+  const urlImagem = URL.createObjectURL(blob);
+
+  if (navigator.canShare && navigator.canShare({ files: [arquivo] })) {
+    navigator.share({
+      files: [arquivo],
+      title: titulo
+    }).catch(function (erro) {
+      console.log('Compartilhamento cancelado ou falhou, abrindo em nova aba:', erro);
+      window.open(urlImagem, '_blank');
+    });
+  } else {
+    window.open(urlImagem, '_blank');
+  }
+}
+
 // ===== DOWNLOAD DA IMAGEM PARA INSTAGRAM STORIES =====
 document.getElementById('btn-baixar-imagem').addEventListener('click', () => {
   const elemento = document.getElementById('stories-preview');
@@ -142,22 +160,7 @@ document.getElementById('btn-baixar-imagem').addEventListener('click', () => {
     backgroundColor: null
   }).then(canvas => {
     canvas.toBlob(function (blob) {
-      const arquivo = new File([blob], 'lista-jogadores-stories.png', { type: 'image/png' });
-
-      if (navigator.canShare && navigator.canShare({ files: [arquivo] })) {
-        navigator.share({
-          files: [arquivo],
-          title: 'Artilheiros'
-        }).catch(function (erro) {
-          console.log('Compartilhamento cancelado ou falhou:', erro);
-        });
-      } else {
-        const link = document.createElement('a');
-        link.download = 'lista-jogadores-stories.png';
-        link.href = URL.createObjectURL(blob);
-        link.click();
-        URL.revokeObjectURL(link.href);
-      }
+      compartilharOuAbrirImagem(blob, 'lista-jogadores-stories.png', 'Artilheiros');
     }, 'image/png');
   });
 });
@@ -253,22 +256,7 @@ document.getElementById('btn-baixar-relatorio').addEventListener('click', () => 
     backgroundColor: '#ffffff'
   }).then(canvas => {
     canvas.toBlob(function (blob) {
-      const arquivo = new File([blob], 'relatorio-financeiro.png', { type: 'image/png' });
-
-      if (navigator.canShare && navigator.canShare({ files: [arquivo] })) {
-        navigator.share({
-          files: [arquivo],
-          title: 'Relatório Financeiro'
-        }).catch(function (erro) {
-          console.log('Compartilhamento cancelado ou falhou:', erro);
-        });
-      } else {
-        const link = document.createElement('a');
-        link.download = 'relatorio-financeiro.png';
-        link.href = URL.createObjectURL(blob);
-        link.click();
-        URL.revokeObjectURL(link.href);
-      }
+      compartilharOuAbrirImagem(blob, 'relatorio-financeiro.png', 'Relatório Financeiro');
     }, 'image/png');
   });
 });

@@ -63,19 +63,25 @@
         <button type="submit">Cadastrar</button>
       </form>
 
-      <button id="btn-baixar-imagem" class="btn-download">Baixar tabela de artilharia</button>
+      <div class="acoes-jogadores">
+        <label class="opcao-compacta">
+          <input type="checkbox" id="check-compacto" />
+          Tabela compacta (para listas maiores)
+        </label>
+        <button id="btn-baixar-imagem" class="btn-download">Baixar tabela de artilharia</button>
+      </div>
 
       <ul id="lista-jogadores" class="lista"></ul>
     </section>
 
-    <!-- PREVIEW DA TABELA DE ARTILHARIA (estilo Instagram, fora da tela até o download) -->
+    <!-- PREVIEW DA TABELA DE ARTILHARIA (estilo Instagram) -->
     <div id="stories-preview" class="stories-preview">
       <div class="stories-header">
-        <img src="logo.png" alt="Fut Coreano" class="stories-logo" />
+        <img src="logo.png" alt="Fut Coreano" class="logo-tabela" />
         <h2 class="stories-titulo-principal">TABELA DE<br>ARTILHARIA</h2>
         <span id="stories-data" class="stories-data"></span>
       </div>
-      <table class="tabela-artilharia">
+      <table class="tabela-artilharia" id="tabela-artilharia">
         <thead>
           <tr>
             <th>POS</th>

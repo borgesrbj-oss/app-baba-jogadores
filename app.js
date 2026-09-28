@@ -109,9 +109,8 @@ function renderizarJogadores(jogadores) {
   listaJogadoresStories.innerHTML = '';
 
   // ---- CÁLCULO CORRETO DE POSIÇÃO COM EMPATES ----
-  // Regra: cada grupo de gols iguais recebe a MESMA posição.
-  // A próxima posição diferente é sempre a anterior + 1
-  // (não pula números conforme a quantidade de empatados).
+  // Cada grupo de gols iguais recebe a MESMA posição.
+  // A próxima posição diferente é sempre a anterior + 1.
   let posicaoAtual = 0;
   let golsAnterior = null;
 
@@ -142,7 +141,6 @@ function renderizarJogadores(jogadores) {
   });
 
   // Data de atualização = a mais recente entre todos os jogadores
-  // (atualiza sozinha sempre que algum gol é alterado ou adicionado)
   if (jogadores.length > 0) {
     const maisRecente = jogadores.reduce((maisNovo, jog) => {
       const dataJog = jog.atualizadoEm || jog.criadoEm || 0;
@@ -224,15 +222,28 @@ function compartilharOuBaixarImagem(blob, nomeArquivo, titulo) {
 document.getElementById('btn-baixar-imagem').addEventListener('click', () => {
   const elemento = document.getElementById('stories-preview');
 
+  if (!elemento) {
+    alert('Erro: elemento da tabela não encontrado no HTML.');
+    return;
+  }
+
   html2canvas(elemento, {
     width: 1080,
     scale: 2,
     backgroundColor: '#3d1152',
-    useCORS: true
+    useCORS: true,
+    allowTaint: true
   }).then(canvas => {
     canvas.toBlob(function (blob) {
+      if (!blob) {
+        alert('Erro ao gerar a imagem (blob vazio).');
+        return;
+      }
       compartilharOuBaixarImagem(blob, 'tabela-artilharia.png', 'Tabela de Artilharia');
     }, 'image/png');
+  }).catch(function (erro) {
+    console.error('Erro ao gerar imagem com html2canvas:', erro);
+    alert('Ocorreu um erro ao gerar a imagem. Veja o console para detalhes.');
   });
 });
 

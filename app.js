@@ -1,6 +1,3 @@
-// ==========================================================
-// NAVEGAÇÃO ENTRE ABAS
-// ==========================================================
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
@@ -13,9 +10,6 @@ tabButtons.forEach(btn => {
   });
 });
 
-// ==========================================================
-// MÓDULO FINANCEIRO
-// ==========================================================
 const formFinanceiro = document.getElementById('form-financeiro');
 const listaFinanceiro = document.getElementById('lista-financeiro');
 const saldoTotal = document.getElementById('saldo-total');
@@ -76,9 +70,6 @@ db.collection('financeiro').orderBy('criadoEm', 'desc').onSnapshot(snapshot => {
   renderizarFinanceiro(registros);
 });
 
-// ==========================================================
-// MÓDULO JOGADORES
-// ==========================================================
 const formJogador = document.getElementById('form-jogador');
 const listaJogadores = document.getElementById('lista-jogadores');
 const listaJogadoresStories = document.getElementById('lista-jogadores-stories');
@@ -101,16 +92,12 @@ formJogador.addEventListener('submit', async (e) => {
   formJogador.reset();
 });
 
-// Desenha a lista normal e a tabela no estilo "Tabela de Artilharia"
 function renderizarJogadores(jogadores) {
   const ordenados = [...jogadores].sort((a, b) => b.gols - a.gols);
 
   listaJogadores.innerHTML = '';
   listaJogadoresStories.innerHTML = '';
 
-  // ---- CÁLCULO CORRETO DE POSIÇÃO COM EMPATES ----
-  // Cada grupo de gols iguais recebe a MESMA posição.
-  // A próxima posição diferente é sempre a anterior + 1.
   let posicaoAtual = 0;
   let golsAnterior = null;
 
@@ -140,7 +127,6 @@ function renderizarJogadores(jogadores) {
     listaJogadoresStories.appendChild(tr);
   });
 
-  // Data de atualização = a mais recente entre todos os jogadores
   if (jogadores.length > 0) {
     const maisRecente = jogadores.reduce((maisNovo, jog) => {
       const dataJog = jog.atualizadoEm || jog.criadoEm || 0;
@@ -172,7 +158,6 @@ db.collection('jogadores').orderBy('criadoEm', 'desc').onSnapshot(snapshot => {
   renderizarJogadores(jogadores);
 });
 
-// Alterna entre modo normal e modo compacto da tabela impressa
 if (checkCompacto) {
   checkCompacto.addEventListener('change', () => {
     const tabela = document.getElementById('tabela-artilharia');
@@ -188,41 +173,23 @@ if (checkCompacto) {
   });
 }
 
-// ==========================================================
-// PRÉ-CARREGAMENTO DA LOGO (garante que ela esteja pronta
-// antes do html2canvas tentar capturar a tabela)
-// ==========================================================
-let logoCarregada = false;
-
-function carregarLogoNoContainer() {
-  return new Promise((resolve) => {
-    const container = document.getElementById('logo-container');
-
-    if (!container) {
-      resolve();
-      return;
+// Garante que todas as imagens dentro de um elemento estejam
+// totalmente carregadas antes do html2canvas rodar, evitando
+// que a logo apareça cortada, distorcida ou ausente.
+function aguardarImagensCarregarem(elemento) {
+  const imagens = elemento.querySelectorAll('img');
+  const promessas = Array.from(imagens).map((img) => {
+    if (img.complete && img.naturalWidth > 0) {
+      return Promise.resolve();
     }
-
-    const img = new Image();
-    img.onload = function () {
-      container.style.backgroundImage = `url('${img.src}')`;
-      logoCarregada = true;
-      resolve();
-    };
-    img.onerror = function () {
-      console.error('Não foi possível carregar logo.png. Verifique se o arquivo está na pasta do projeto.');
-      resolve();
-    };
-    img.src = 'logo.png';
+    return new Promise((resolve) => {
+      img.addEventListener('load', resolve);
+      img.addEventListener('error', resolve);
+    });
   });
+  return Promise.all(promessas);
 }
 
-// Carrega a logo assim que a página abre
-carregarLogoNoContainer();
-
-// ==========================================================
-// FUNÇÃO DE DOWNLOAD/COMPARTILHAMENTO DE IMAGEM
-// ==========================================================
 function compartilharOuBaixarImagem(blob, nomeArquivo, titulo) {
   const arquivo = new File([blob], nomeArquivo, { type: 'image/png' });
   const urlImagem = URL.createObjectURL(blob);
@@ -250,9 +217,6 @@ function compartilharOuBaixarImagem(blob, nomeArquivo, titulo) {
   }
 }
 
-// ==========================================================
-// BOTÃO: BAIXAR TABELA DE ARTILHARIA
-// ==========================================================
 document.getElementById('btn-baixar-imagem').addEventListener('click', async () => {
   const elemento = document.getElementById('stories-preview');
 
@@ -261,11 +225,7 @@ document.getElementById('btn-baixar-imagem').addEventListener('click', async () 
     return;
   }
 
-  // Garante que a logo já esteja carregada antes de gerar a imagem.
-  // Se por algum motivo ainda não carregou, tenta carregar de novo agora.
-  if (!logoCarregada) {
-    await carregarLogoNoContainer();
-  }
+  await aguardarImagensCarregarem(elemento);
 
   html2canvas(elemento, {
     width: 1080,
@@ -287,10 +247,7 @@ document.getElementById('btn-baixar-imagem').addEventListener('click', async () 
   });
 });
 
-// ==========================================================
-// BOTÃO: BAIXAR RELATÓRIO FINANCEIRO
-// ==========================================================
-document.getElementById('btn-baixar-relatorio').addEventListener('click', () => {
+document.getElementById('btn-baixar-relatorio').addEventListener('click', async () => {
   const tipoRelatorio = document.getElementById('reportType').value;
 
   const agora = new Date();
@@ -352,9 +309,12 @@ document.getElementById('btn-baixar-relatorio').addEventListener('click', () => 
 
   const conteudo = document.getElementById('relatorio-conteudo');
   conteudo.innerHTML = `
-    <div style="background: linear-gradient(135deg, #7a2f9e, #f07d21); padding: 20px; border-radius: 10px; color: #ffffff; margin-bottom: 20px;">
-      <h2 style="margin: 0;">Relatório Financeiro - Fut Coreano FC</h2>
-      <p style="margin: 4px 0 0 0;">${tituloPeriodo}</p>
+    <div style="display:flex; align-items:center; gap:12px; background: linear-gradient(135deg, #7a2f9e, #f07d21); padding: 20px; border-radius: 10px; color: #ffffff; margin-bottom: 20px;">
+      <img src="logo.png" alt="Fut Coreano" style="width:50px; height:50px; object-fit:contain;" />
+      <div>
+        <h2 style="margin: 0;">Relatório Financeiro - Fut Coreano FC</h2>
+        <p style="margin: 4px 0 0 0;">${tituloPeriodo}</p>
+      </div>
     </div>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
       <thead>
@@ -375,9 +335,13 @@ document.getElementById('btn-baixar-relatorio').addEventListener('click', () => 
     </div>
   `;
 
+  await aguardarImagensCarregarem(conteudo);
+
   html2canvas(conteudo, {
     scale: 3,
-    backgroundColor: '#ffffff'
+    backgroundColor: '#ffffff',
+    useCORS: true,
+    allowTaint: true
   }).then(canvas => {
     canvas.toBlob(function (blob) {
       compartilharOuBaixarImagem(blob, 'relatorio-financeiro.png', 'Relatório Financeiro');

@@ -35,10 +35,13 @@ body {
   color: var(--branco);
 }
 
+/* Logo com tamanho fixo e uniforme, não importa o tamanho do arquivo original */
 .logo-clube {
-  width: 80px;
-  height: auto;
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
   margin-bottom: 8px;
+  display: inline-block;
 }
 
 .app-header h1 {
@@ -170,7 +173,6 @@ body {
   padding: 4px;
   border-radius: 6px;
   border: 1px solid #ccc;
-  text-align: center;
 }
 
 /* ===== FILTRO DE RELATÓRIO ===== */
@@ -185,6 +187,21 @@ body {
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #ddd;
+}
+
+/* ===== AÇÕES DA ABA JOGADORES ===== */
+.acoes-jogadores {
+  margin-bottom: 16px;
+}
+
+.opcao-compacta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--roxo-escuro);
+  margin-bottom: 10px;
+  cursor: pointer;
 }
 
 /* ===== BOTÕES DE DOWNLOAD/RELATÓRIO ===== */
@@ -232,10 +249,14 @@ body {
   position: relative;
 }
 
-.stories-logo {
-  width: 90px;
-  height: auto;
-  margin-bottom: 16px;
+/* Logo na tabela impressa, tamanho fixo e uniforme */
+.logo-tabela {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
 }
 
 .stories-titulo-principal {
@@ -292,4 +313,23 @@ body {
 
 .tabela-artilharia tbody td:nth-child(3) {
   color: var(--laranja-claro);
+}
+
+/* ===== MODO COMPACTO (para listas maiores de jogadores) ===== */
+.tabela-artilharia.compacta thead th {
+  padding: 10px;
+  font-size: 20px;
+}
+
+.tabela-artilharia.compacta tbody td {
+  padding: 8px 12px;
+  font-size: 18px;
+}
+
+.stories-preview.compacta .stories-titulo-principal {
+  font-size: 48px;
+}
+
+.stories-preview.compacta {
+  padding: 40px 40px;
 }

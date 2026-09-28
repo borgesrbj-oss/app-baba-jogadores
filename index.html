@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Controle Babá & Jogadores</title>
+  <title>Fut Coreano - Controle Babá & Jogadores</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app-container">
     <header class="app-header">
-      <h1>Meu Painel</h1>
+      <img src="logo.png" alt="Fut Coreano Football Club" class="logo-clube" />
+      <h1>Fut Coreano FC</h1>
       <nav class="tabs">
         <button class="tab-btn active" data-tab="financeiro">Financeiro</button>
         <button class="tab-btn" data-tab="jogadores">Jogadores</button>
@@ -62,15 +63,31 @@
         <button type="submit">Cadastrar</button>
       </form>
 
-      <div id="stories-preview" class="stories-preview">
-        <h3 id="stories-titulo">🏆 Artilheiros</h3>
-        <ol id="lista-jogadores-stories"></ol>
-      </div>
+      <!-- Botão temporário: usar uma única vez para popular o banco -->
+      <button id="btn-popular-jogadores" class="btn-relatorio">Popular jogadores (usar 1x)</button>
 
-      <button id="btn-baixar-imagem" class="btn-download">Baixar imagem para Stories</button>
+      <button id="btn-baixar-imagem" class="btn-download">Baixar tabela de artilharia</button>
 
       <ul id="lista-jogadores" class="lista"></ul>
     </section>
+
+    <!-- PREVIEW DA TABELA DE ARTILHARIA (estilo Instagram) -->
+    <div id="stories-preview" class="stories-preview">
+      <div class="stories-header">
+        <h2 class="stories-titulo-principal">TABELA DE<br>ARTILHARIA</h2>
+        <span id="stories-data" class="stories-data"></span>
+      </div>
+      <table class="tabela-artilharia">
+        <thead>
+          <tr>
+            <th>POS</th>
+            <th>ATLETA</th>
+            <th>GOLS</th>
+          </tr>
+        </thead>
+        <tbody id="lista-jogadores-stories"></tbody>
+      </table>
+    </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>

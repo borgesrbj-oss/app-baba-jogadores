@@ -173,18 +173,52 @@ db.collection('jogadores').orderBy('criadoEm', 'desc').onSnapshot(snapshot => {
 });
 
 // Alterna entre modo normal e modo compacto da tabela impressa
-checkCompacto.addEventListener('change', () => {
-  const tabela = document.getElementById('tabela-artilharia');
-  const preview = document.getElementById('stories-preview');
+if (checkCompacto) {
+  checkCompacto.addEventListener('change', () => {
+    const tabela = document.getElementById('tabela-artilharia');
+    const preview = document.getElementById('stories-preview');
 
-  if (checkCompacto.checked) {
-    tabela.classList.add('compacta');
-    preview.classList.add('compacta');
-  } else {
-    tabela.classList.remove('compacta');
-    preview.classList.remove('compacta');
-  }
-});
+    if (checkCompacto.checked) {
+      tabela.classList.add('compacta');
+      preview.classList.add('compacta');
+    } else {
+      tabela.classList.remove('compacta');
+      preview.classList.remove('compacta');
+    }
+  });
+}
+
+// ==========================================================
+// PRÉ-CARREGAMENTO DA LOGO (garante que ela esteja pronta
+// antes do html2canvas tentar capturar a tabela)
+// ==========================================================
+let logoCarregada = false;
+
+function carregarLogoNoContainer() {
+  return new Promise((resolve) => {
+    const container = document.getElementById('logo-container');
+
+    if (!container) {
+      resolve();
+      return;
+    }
+
+    const img = new Image();
+    img.onload = function () {
+      container.style.backgroundImage = `url('${img.src}')`;
+      logoCarregada = true;
+      resolve();
+    };
+    img.onerror = function () {
+      console.error('Não foi possível carregar logo.png. Verifique se o arquivo está na pasta do projeto.');
+      resolve();
+    };
+    img.src = 'logo.png';
+  });
+}
+
+// Carrega a logo assim que a página abre
+carregarLogoNoContainer();
 
 // ==========================================================
 // FUNÇÃO DE DOWNLOAD/COMPARTILHAMENTO DE IMAGEM
@@ -219,12 +253,18 @@ function compartilharOuBaixarImagem(blob, nomeArquivo, titulo) {
 // ==========================================================
 // BOTÃO: BAIXAR TABELA DE ARTILHARIA
 // ==========================================================
-document.getElementById('btn-baixar-imagem').addEventListener('click', () => {
+document.getElementById('btn-baixar-imagem').addEventListener('click', async () => {
   const elemento = document.getElementById('stories-preview');
 
   if (!elemento) {
     alert('Erro: elemento da tabela não encontrado no HTML.');
     return;
+  }
+
+  // Garante que a logo já esteja carregada antes de gerar a imagem.
+  // Se por algum motivo ainda não carregou, tenta carregar de novo agora.
+  if (!logoCarregada) {
+    await carregarLogoNoContainer();
   }
 
   html2canvas(elemento, {

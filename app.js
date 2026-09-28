@@ -93,7 +93,8 @@ formJogador.addEventListener('submit', async (e) => {
   await db.collection('jogadores').add({
     nome,
     gols,
-    criadoEm: Date.now()
+    criadoEm: Date.now(),
+    atualizadoEm: Date.now()
   });
 
   formJogador.reset();
@@ -101,12 +102,14 @@ formJogador.addEventListener('submit', async (e) => {
 
 // Desenha a lista normal e a tabela no estilo "Tabela de Artilharia"
 function renderizarJogadores(jogadores) {
+  // Ordena por número de gols, do maior para o menor
   const ordenados = [...jogadores].sort((a, b) => b.gols - a.gols);
 
   listaJogadores.innerHTML = '';
   listaJogadoresStories.innerHTML = '';
 
-  // Calcula a posição considerando empates (mesmo número de gols = mesma posição)
+  // Calcula a posição considerando empates:
+  // jogadores com o mesmo número de gols ficam na mesma posição
   let posicaoAtual = 0;
   let golsAnterior = null;
 
@@ -136,15 +139,26 @@ function renderizarJogadores(jogadores) {
     listaJogadoresStories.appendChild(tr);
   });
 
-  // Atualiza a data exibida no canto da tabela ("ATUALIZADO EM: dd/mm/aaaa")
-  const hoje = new Date();
-  const dataFormatada = hoje.toLocaleDateString('pt-BR');
+  // Descobre a data da atualização mais recente entre todos os jogadores.
+  // Assim, a data exibida reflete a última vez que algum gol foi alterado,
+  // e não a data em que o botão de download foi clicado.
+  let ultimaAtualizacao = null;
+  jogadores.forEach(jog => {
+    const referencia = jog.atualizadoEm || jog.criadoEm;
+    if (referencia && (!ultimaAtualizacao || referencia > ultimaAtualizacao)) {
+      ultimaAtualizacao = referencia;
+    }
+  });
+
+  const dataParaExibir = ultimaAtualizacao ? new Date(ultimaAtualizacao) : new Date();
+  const dataFormatada = dataParaExibir.toLocaleDateString('pt-BR');
   storiesData.textContent = `ATUALIZADO EM: ${dataFormatada}`;
 }
 
 async function editarGols(id, novoValor) {
   await db.collection('jogadores').doc(id).update({
-    gols: parseInt(novoValor)
+    gols: parseInt(novoValor),
+    atualizadoEm: Date.now()
   });
 }
 
@@ -156,79 +170,6 @@ db.collection('jogadores').orderBy('criadoEm', 'desc').onSnapshot(snapshot => {
   const jogadores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   renderizarJogadores(jogadores);
 });
-
-// ==========================================================
-// POPULAR BANCO DE DADOS (usar apenas uma vez)
-// Lista extraída da imagem "Tabela de Artilharia" enviada
-// ==========================================================
-const jogadoresIniciais = [
-  { nome: 'MAGO', gols: 41 },
-  { nome: 'RODRIGO', gols: 25 },
-  { nome: 'JOAO DENTISTA', gols: 20 },
-  { nome: 'PATO', gols: 17 },
-  { nome: 'LUKA', gols: 16 },
-  { nome: 'R10', gols: 13 },
-  { nome: 'SAVIO', gols: 12 },
-  { nome: 'CLOVIS', gols: 12 },
-  { nome: 'GERARDI', gols: 12 },
-  { nome: 'RAFA', gols: 12 },
-  { nome: 'ICARO', gols: 11 },
-  { nome: 'DOLFO', gols: 10 },
-  { nome: 'PH', gols: 9 },
-  { nome: 'HENRIQUE', gols: 9 },
-  { nome: 'ELL', gols: 8 },
-  { nome: 'ZE', gols: 6 },
-  { nome: 'LUCAS', gols: 6 },
-  { nome: 'RICARDO', gols: 6 },
-  { nome: 'FLAVIO', gols: 6 },
-  { nome: 'TELA', gols: 5 },
-  { nome: 'JAMISON', gols: 5 },
-  { nome: 'LUIZ', gols: 5 },
-  { nome: 'GUEZZO', gols: 4 },
-  { nome: 'JP', gols: 4 },
-  { nome: 'VITINHO', gols: 3 },
-  { nome: 'DOUGLAS', gols: 3 },
-  { nome: 'LEOZINHO', gols: 3 },
-  { nome: 'DEDÉ', gols: 2 },
-  { nome: 'FEFEU', gols: 2 },
-  { nome: 'BLINCK', gols: 1 },
-  { nome: 'MATEUS PASSOS', gols: 1 },
-  { nome: 'NETINHO', gols: 1 },
-  { nome: 'GUSTAVO', gols: 1 },
-  { nome: 'GEORGE', gols: 1 },
-  { nome: 'VIOLA', gols: 1 },
-  { nome: 'TANLO', gols: 1 }
-];
-
-const btnPopular = document.getElementById('btn-popular-jogadores');
-if (btnPopular) {
-  btnPopular.addEventListener('click', async () => {
-    const confirmar = confirm(
-      `Isso vai cadastrar ${jogadoresIniciais.length} jogadores no banco de dados. Deseja continuar?`
-    );
-    if (!confirmar) return;
-
-    btnPopular.disabled = true;
-    btnPopular.textContent = 'Cadastrando...';
-
-    try {
-      for (const jogador of jogadoresIniciais) {
-        await db.collection('jogadores').add({
-          nome: jogador.nome,
-          gols: jogador.gols,
-          criadoEm: Date.now()
-        });
-      }
-      alert('Jogadores cadastrados com sucesso!');
-      btnPopular.textContent = 'Concluído! Pode remover este botão.';
-    } catch (erro) {
-      console.error('Erro ao cadastrar jogadores:', erro);
-      alert('Ocorreu um erro ao cadastrar. Veja o console para detalhes.');
-      btnPopular.disabled = false;
-      btnPopular.textContent = 'Popular jogadores (usar 1x)';
-    }
-  });
-}
 
 // ==========================================================
 // FUNÇÃO DE DOWNLOAD/COMPARTILHAMENTO DE IMAGEM
@@ -343,9 +284,12 @@ document.getElementById('btn-baixar-relatorio').addEventListener('click', () => 
 
   const conteudo = document.getElementById('relatorio-conteudo');
   conteudo.innerHTML = `
-    <div style="background: linear-gradient(135deg, #7a2f9e, #f07d21); padding: 20px; border-radius: 10px; color: #ffffff; margin-bottom: 20px;">
-      <h2 style="margin: 0;">Relatório Financeiro - Fut Coreano FC</h2>
-      <p style="margin: 4px 0 0 0;">${tituloPeriodo}</p>
+    <div style="display:flex; align-items:center; gap:12px; background: linear-gradient(135deg, #7a2f9e, #f07d21); padding: 20px; border-radius: 10px; color: #ffffff; margin-bottom: 20px;">
+      <img src="logo.png" alt="Fut Coreano" style="width:50px; height:auto;" />
+      <div>
+        <h2 style="margin: 0;">Relatório Financeiro - Fut Coreano FC</h2>
+        <p style="margin: 4px 0 0 0;">${tituloPeriodo}</p>
+      </div>
     </div>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
       <thead>

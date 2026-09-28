@@ -170,6 +170,7 @@ body {
   padding: 4px;
   border-radius: 6px;
   border: 1px solid #ccc;
+  text-align: center;
 }
 
 /* ===== FILTRO DE RELATÓRIO ===== */
@@ -231,6 +232,12 @@ body {
   position: relative;
 }
 
+.stories-logo {
+  width: 90px;
+  height: auto;
+  margin-bottom: 16px;
+}
+
 .stories-titulo-principal {
   color: var(--branco);
   font-size: 64px;
@@ -264,6 +271,7 @@ body {
   padding: 16px;
   font-size: 26px;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .tabela-artilharia tbody tr:nth-child(odd) {
@@ -279,6 +287,7 @@ body {
   color: var(--branco);
   font-size: 24px;
   font-weight: 700;
+  text-align: center;
 }
 
 .tabela-artilharia tbody td:nth-child(3) {

@@ -83,6 +83,7 @@ const formJogador = document.getElementById('form-jogador');
 const listaJogadores = document.getElementById('lista-jogadores');
 const listaJogadoresStories = document.getElementById('lista-jogadores-stories');
 const storiesData = document.getElementById('stories-data');
+const checkCompacto = document.getElementById('check-compacto');
 
 formJogador.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -102,20 +103,21 @@ formJogador.addEventListener('submit', async (e) => {
 
 // Desenha a lista normal e a tabela no estilo "Tabela de Artilharia"
 function renderizarJogadores(jogadores) {
-  // Ordena por número de gols, do maior para o menor
   const ordenados = [...jogadores].sort((a, b) => b.gols - a.gols);
 
   listaJogadores.innerHTML = '';
   listaJogadoresStories.innerHTML = '';
 
-  // Calcula a posição considerando empates:
-  // jogadores com o mesmo número de gols ficam na mesma posição
+  // ---- CÁLCULO CORRETO DE POSIÇÃO COM EMPATES ----
+  // Regra: cada grupo de gols iguais recebe a MESMA posição.
+  // A próxima posição diferente é sempre a anterior + 1
+  // (não pula números conforme a quantidade de empatados).
   let posicaoAtual = 0;
   let golsAnterior = null;
 
-  ordenados.forEach((jog, index) => {
+  ordenados.forEach((jog) => {
     if (jog.gols !== golsAnterior) {
-      posicaoAtual = index + 1;
+      posicaoAtual += 1;
       golsAnterior = jog.gols;
     }
 
@@ -139,20 +141,21 @@ function renderizarJogadores(jogadores) {
     listaJogadoresStories.appendChild(tr);
   });
 
-  // Descobre a data da atualização mais recente entre todos os jogadores.
-  // Assim, a data exibida reflete a última vez que algum gol foi alterado,
-  // e não a data em que o botão de download foi clicado.
-  let ultimaAtualizacao = null;
-  jogadores.forEach(jog => {
-    const referencia = jog.atualizadoEm || jog.criadoEm;
-    if (referencia && (!ultimaAtualizacao || referencia > ultimaAtualizacao)) {
-      ultimaAtualizacao = referencia;
-    }
-  });
+  // Data de atualização = a mais recente entre todos os jogadores
+  // (atualiza sozinha sempre que algum gol é alterado ou adicionado)
+  if (jogadores.length > 0) {
+    const maisRecente = jogadores.reduce((maisNovo, jog) => {
+      const dataJog = jog.atualizadoEm || jog.criadoEm || 0;
+      const dataMaisNovo = maisNovo.atualizadoEm || maisNovo.criadoEm || 0;
+      return dataJog > dataMaisNovo ? jog : maisNovo;
+    }, jogadores[0]);
 
-  const dataParaExibir = ultimaAtualizacao ? new Date(ultimaAtualizacao) : new Date();
-  const dataFormatada = dataParaExibir.toLocaleDateString('pt-BR');
-  storiesData.textContent = `ATUALIZADO EM: ${dataFormatada}`;
+    const dataFormatada = new Date(maisRecente.atualizadoEm || maisRecente.criadoEm)
+      .toLocaleDateString('pt-BR');
+    storiesData.textContent = `ATUALIZADO EM: ${dataFormatada}`;
+  } else {
+    storiesData.textContent = `ATUALIZADO EM: ${new Date().toLocaleDateString('pt-BR')}`;
+  }
 }
 
 async function editarGols(id, novoValor) {
@@ -171,9 +174,22 @@ db.collection('jogadores').orderBy('criadoEm', 'desc').onSnapshot(snapshot => {
   renderizarJogadores(jogadores);
 });
 
+// Alterna entre modo normal e modo compacto da tabela impressa
+checkCompacto.addEventListener('change', () => {
+  const tabela = document.getElementById('tabela-artilharia');
+  const preview = document.getElementById('stories-preview');
+
+  if (checkCompacto.checked) {
+    tabela.classList.add('compacta');
+    preview.classList.add('compacta');
+  } else {
+    tabela.classList.remove('compacta');
+    preview.classList.remove('compacta');
+  }
+});
+
 // ==========================================================
 // FUNÇÃO DE DOWNLOAD/COMPARTILHAMENTO DE IMAGEM
-// (usa link com download, compatível com Android, iOS e desktop)
 // ==========================================================
 function compartilharOuBaixarImagem(blob, nomeArquivo, titulo) {
   const arquivo = new File([blob], nomeArquivo, { type: 'image/png' });
@@ -211,7 +227,8 @@ document.getElementById('btn-baixar-imagem').addEventListener('click', () => {
   html2canvas(elemento, {
     width: 1080,
     scale: 2,
-    backgroundColor: '#3d1152'
+    backgroundColor: '#3d1152',
+    useCORS: true
   }).then(canvas => {
     canvas.toBlob(function (blob) {
       compartilharOuBaixarImagem(blob, 'tabela-artilharia.png', 'Tabela de Artilharia');
@@ -284,12 +301,9 @@ document.getElementById('btn-baixar-relatorio').addEventListener('click', () => 
 
   const conteudo = document.getElementById('relatorio-conteudo');
   conteudo.innerHTML = `
-    <div style="display:flex; align-items:center; gap:12px; background: linear-gradient(135deg, #7a2f9e, #f07d21); padding: 20px; border-radius: 10px; color: #ffffff; margin-bottom: 20px;">
-      <img src="logo.png" alt="Fut Coreano" style="width:50px; height:auto;" />
-      <div>
-        <h2 style="margin: 0;">Relatório Financeiro - Fut Coreano FC</h2>
-        <p style="margin: 4px 0 0 0;">${tituloPeriodo}</p>
-      </div>
+    <div style="background: linear-gradient(135deg, #7a2f9e, #f07d21); padding: 20px; border-radius: 10px; color: #ffffff; margin-bottom: 20px;">
+      <h2 style="margin: 0;">Relatório Financeiro - Fut Coreano FC</h2>
+      <p style="margin: 4px 0 0 0;">${tituloPeriodo}</p>
     </div>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
       <thead>
